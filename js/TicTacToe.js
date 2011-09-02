@@ -273,7 +273,7 @@ function TicTacToe() {
 			// no winning condition for opponent
 			result['success']=false;
 			return result;
-			//asdfasdf
+			//asdfasdfasdfasf
 		}		
 			
         //return (result && !board[result[0]][result[1]]) ? result : false;
