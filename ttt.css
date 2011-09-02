@@ -1,0 +1,77 @@
+div#container_game {
+	width: 400px; 
+	float:left;
+}
+div#board {
+	width: 400px;
+	height:400px;
+}
+div#pane_control {
+	width:100%;
+}
+
+div#container_console {
+	border: 0px silver solid;
+	float:left;
+	width: 300px;	
+	height: 500px;
+}
+
+
+.tile {
+	border: 2px silver solid;
+	cursor: pointer;
+	float:left;
+	width: 30%;
+	height: 30%;
+	margin: 2px;
+	line-height:120px;
+	font-size:64px;
+	text-align: center;
+}
+
+div#title_bar {
+	width: 100%;
+	font-size:1.5em;
+}
+
+.widget{
+	width: 90%;
+	padding : 0px;
+	border: 0px solid #dedbd1;
+	margin-top:10px;
+	margin-bottom: 15px;
+}
+.tabnav {
+	border:0px solid #000;
+	margin:0;
+}
+
+.tabdiv {
+	background-color:#dddddd;
+	padding:10px;
+}
+
+.button_nav {
+	background-color:#dddddd;
+	padding:3px;
+}
+
+.tabnav li {
+display: inline;
+list-style:none;
+	text-decoration: none;
+	text-transform: uppercase;
+	color: #222;
+	font-weight: bold;
+	padding: 0px 4px; 
+	outline; none;
+	cursor:pointer;
+}
+
+
+.tabnav li a:hover, .tabnav li a:active  {
+	background: #dedbd1;
+	color: #222;
+	text-decoration: none;
+}
