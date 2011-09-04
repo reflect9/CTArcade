@@ -138,19 +138,19 @@ function TicTacToe() {
 	this.analyzeMove = function(brd,player,userMoveLoc) {
 		// check which strategies are matching with given brd,turn,loc
 		matchingStrategy = [];
-		for (key in this.strategyList) {
-			st = strategy[key];
+		for (key in this.strategySet) {
+			st = this.strategySet[key];
 			console.log(st);
 			//console("ana" + brd,player);
 			result = this[st.code](brd,player);
-			if (result.success) {
-				// if the strategy finds possible moves(locList), then check if 
-				// user's move(loc) is in the moves 
-				
-				if(result.loc.has(userMoveLoc)) {
-					matchingStrategy.push({'name':st.name,'code':st.code, 'locList':result.loc});
-				}
-				
+			if (result['success']==true) {
+				for(i in result.loc) {
+					l = result.loc[i];
+					if(userMoveLoc[0]==l[0] && userMoveLoc[1]==l[1]) {
+						matchingStrategy.push({'name':st.name,'code':st.code});
+					}
+					
+				}				
 			}
 		}
 		console.log(matchingStrategy);
@@ -181,7 +181,7 @@ function TicTacToe() {
     	for (key in strategy) {
     		st = strategy[key];
     		result = this[st.code](brd,player);
-    		if (result.success)  {
+    		if (result['success']==true)  {
     			bestStrategy = {'message':st.name,'locList':result.loc};
     			return bestStrategy;
     		}

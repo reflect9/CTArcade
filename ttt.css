@@ -17,13 +17,41 @@ div#container_console {
 	height: 500px;
 }
 
+.rule_inactive {
+	color:#222222;
+	font-family : Arial, Helvetica, sans-serif;
+}
+.rule_unapplicable {
+	color:#aaa;
+	text-decoration:line-through;
+	font-family : Arial, Helvetica, sans-serif;
+}
+.rule_selected {
+	color:#B81900;
+	font-family : Arial, Helvetica, sans-serif;
+}
+
+.bigButton {
+	position:absolute; 
+	cursor:pointer; 
+	display:table; 
+	width:100%; 
+	height:100%; 
+	left:0px; 
+	right:0px; 
+	border:0px solid black; 
+	opacity:0.6; 
+	color:red; 
+	background-color:#fff;
+	
+}
 
 .tile {
 	border: 2px silver solid;
 	cursor: pointer;
 	float:left;
-	width: 30%;
-	height: 30%;
+	width: 31%;
+	height: 31%;
 	margin: 2px;
 	line-height:120px;
 	font-size:64px;
