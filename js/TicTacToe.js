@@ -17,12 +17,12 @@ function TicTacToe() {
 	this.history = [];	// pop in/out current board state
 	this.strategySet = [
 						{'name':"Win",'code':"takeWin",'enabled':true},
-						{'name':"Block Win",'code':"takeBlockWin",'enabled':true},
-						{'name':"Take Center",'code':"takeCenter",'enabled':true},
-						{'name':"Take Any Corner",'code':"takeAnyCorner",'enabled':true},
-						{'name':"Take Adjacent Square",'code':"takeAdjacentSquare",'enabled':true},
+						{'name':"Block Win",'code':"takeBlockWin",'enabled':false},
+						{'name':"Take Center",'code':"takeCenter",'enabled':false},
+						{'name':"Take Any Corner",'code':"takeAnyCorner",'enabled':false},
+						{'name':"Take Adjacent Square",'code':"takeAdjacentSquare",'enabled':false},
 						{'name':"Random Move",'code':"takeRandom",'enabled':true},
-						{'name':"Take OppositeCorner",'code':"takeOppositeCorner",'enabled':true}
+						{'name':"Take OppositeCorner",'code':"takeOppositeCorner",'enabled':false}
 					];
 	
 	// var script = {
@@ -143,7 +143,7 @@ function TicTacToe() {
 			console.log(st);
 			//console("ana" + brd,player);
 			result = this[st.code](brd,player);
-			if (result['success']==true) {
+			if (true /*result['success']==true*/) {
 				for(i in result.loc) {
 					l = result.loc[i];
 					if(userMoveLoc[0]==l[0] && userMoveLoc[1]==l[1]) {
@@ -173,17 +173,36 @@ function TicTacToe() {
         
     }
     
+    this.getEnabledStrategy = function() {
+    	enabledStrategy = [];
+    	for (i in this.strategySet) {
+    		st = this.strategySet[i];  // select one strategy one-by-one
+    		if(st['enabled']==false) continue;  // if the strategy is not enabled, pass
+    		else enabledStrategy.push(st);
+    	}
+    	return enabledStrategy;
+    }
+    
+    this.enableStrategy = function(code) {
+    	for (i in this.strategySet) {
+    		st = this.strategySet[i];
+    		if(st['code']==code) {
+    			st['enabled']=true;
+    		}
+    	}
+    }
     
     this.findBestStrategy = function(brd,player,strategy) {
     	if (this.isFull()) {
     		return {'message':"Tie Game",'locList':undefined};
     	}
     	for (key in strategy) {
-    		st = strategy[key];
-    		result = this[st.code](brd,player);
+    		st = strategy[key];  // select one strategy one-by-one
+    		if(st['enabled']==false) continue;  // if the strategy is not enabled, pass
+    		result = this[st.code](brd,player); // try the strategy on current board
     		if (result['success']==true)  {
     			bestStrategy = {'message':st.name,'locList':result.loc};
-    			return bestStrategy;
+    			return bestStrategy;	// return the first strategy matched. d'nt try the rest
     		}
     	}
 		bestStrategy = {'message':'no strategy found','locList':undefined};
@@ -411,199 +430,6 @@ function TicTacToe() {
 		// result['success']=false;
 		return result;
     }
-    
-    
-
-    
-    /* CONNECT FOUR STUFF */ 
-    
-    /*
-    this.cfMove = function(x) {
-        // find first open slot
-        for (var z = 0; z < 6 ; z++) {
-            var cond1 = (!board[x][z] && z == 5) ;
-            var cond2 =  (!board[x][z] && board[x][z+1]);
-               if (cond1 || cond2) {
-                   this.move(x,z);
-                   return [x, z];
-               }
-       }
-       return false;
-    }
-    this.cfTakeCenter = function () {
-        for (var i = 6; i >= 0; i--) {
-            if (this.cfPlayable([3, i]))
-                return [3, i];
-        }
-        return false;
-    }
-    
-    this.cfTakeWin = function () {
-        for (var i = 0; i < x; i++) {
-            for (var j = 0; j < y; j++) {
-                var win = this.coreChecker(i, j, 0, [], 3, 'HORIZ'); // this.horizWin(i, j, 0, []);
-                if (win)
-                    return win;
-                win = this.coreChecker(i, j, 0, [], 3, 'VERT');
-                if (win)
-                    return win;
-                win = this.coreChecker(i, j, 0, [], 3, 'DIAG1');
-                if (win)
-                    return win;
-                win = this.coreChecker(i, j, 0, [], 3, 'DIAG2');
-                if (win)
-                    return win;
-                
-            
-            }
-        }
-        return false;
-    }
-    
-    this.cfBlockWin = function () {
-        this.turn = (this.turn == X) ? Y : X;
-        var result = this.cfTakeWin()
-        this.turn = (this.turn == X) ? Y : X;        
-        return result;
-    }
-    
-    this.cfDetectWin = function() {
-        var streak = 0;
-        for (var i = 0; i < x; i++) {
-            for (var j = 0; j < y; j++) {
-               var result = this.checkForWin(i, j, 0);
-               if (result) {
-                alert(i+":"+j);
-                return result;
-            }
-            }
-        }
-        return false;
-    }
-    
-    
-    this.coreChecker = function(i, j, count, holes, countCheck, direction, holesAllowed) {
-         holesAllowed = holesAllowed || 1;
-         var oppTurn = (this.turn == X) ? Y : X;
-         if (i >= 7 || j >= 6 || j < 0 || i < 0)
-             return false;
-         else if (holes.length > holesAllowed || board[i][j] == oppTurn)
-             return false;
-         else if (count == countCheck) // 3 to check for move, 4 to validate 
-             return holes.length ? holes[0] : [i, j]; 
-         else {
-             if (!board[i][j])
-                 holes.push([i,j]);
-             if (direction == 'HORIZ')
-                 i++;
-             else if (direction == 'VERT')
-                 j++;
-             else if (direction == 'DIAG1') {
-                 i++;
-                 j++;
-             } else if (direction == 'DIAG2') {
-                 i--;
-                 j++;
-             }
-             return this.coreChecker(i, j, count + 1, holes, countCheck, direction);
-         }
-     }
-     
-    this.cfBuildDiagonalLine = function() {
-        for (var i = 0; i < x; i++) {
-            for (var j = 0; j < y; j++) {
-                var move = [i,j];
-                var line = this.coreChecker(i, j, 0, [], 2, 'DIAG1', 1);
-                if (line && this.cfPlayable(move))
-                    return move;
-                line = this.coreChecker(i, j, 0, [], 2, 'DIAG2', 1);
-                if (line && this.cfPlayable(move))
-                    return move;
-            }
-        }
-        return false;
-    }
-    
-    this.cfBuildVerticalLine = function() {
-       for (var i = 0; i < x; i++) {
-           var streak = 0;
-           for (var j = y-1; j >= 0; j--) {
-               if (board[i][j] == this.turn)
-                 streak++;
-               else if (streak >= 2 && this.cfPlayable([i,j])) {
-                   streak = 0;
-                   return [i,j];
-               } else 
-                    streak =0;
-           }
-       }
-       return false;
-   }
-
-   this.cfBlockVerticalLine = function() {
-       var origTurn = this.turn;
-       var oppTurn = (this.turn == X) ? Y : X;
-       this.turn = oppTurn;
-       var move = this.cfBuildVerticalLine();
-       this.turn = origTurn;
-       return (move && this.cfPlayable(move)) ? move : false;
-   }
-
-
-  this.cfBlockHorizontalLine = function() {
-      var origTurn = this.turn;
-      var oppTurn = (this.turn == X) ? Y : X;
-      this.turn = oppTurn;
-      var move = this.cfBuildHorizontalLine();
-      this.turn = origTurn;
-      return move;
-  }
-    
-    this.cfBuildHorizontalLine = function() {
-       // Associative List for best streak
-       for (var j = 0; j < y; j++) {
-           var streak = 0;
-           for (var i = 0; i < x; i++) {
-               var pt = [i, j];
-               if (board[i][j] == this.turn)
-                 streak++;
-               else if (streak >= 2 && this.cfPlayable(pt)) {
-                   streak = 0;
-                   return pt;
-               } else 
-                    streak = 0;
-           }
-       }
-       return false;
-   }
-   
-    this.cfPlayable = function(pt) {
-        var x = pt[0];
-        var y = pt[1];
-        return (!board[x][y] && y == 5) || (!board[x][y] && board[x][y+1]);
-    }
-    
-    // this.generateTable = function() {
-    //     var data = ("<table>");
-    //     for (var j = 0; j < y; j++) {
-    //         data += ('<tr class="row">');
-    //         for (var i = 0 ; i < x; i++) {
-    //             data += ('<td id="t' + x + '' + y + '" class="tile"></td>');
-    //         }
-    //         data +=('</tr>');
-    //     }
-    //     data +='</table>';
-    //     return data;
-    // }
-    //    
-    this.checkForWin = function(i, j, count) {     
-         return false;
-     }
-  
-  this.cfRandom = function() {
-      return [2,4];
-  }
-	*/
 }
 
 //

@@ -1,0 +1,23 @@
+<html>
+<head>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.min.js"></script>
+	<script type="text/javascript">
+		list = ['a','b','c'];
+		$('document').ready( function() {
+			$(list).each( function(i,entry) {
+				var e = entry;
+				$('<div></div>').
+					text(entry).
+					click(function() { doSomething(e); }).
+					appendTo('body');
+			});
+		});
+		function doSomething(code) {
+			alert(code);
+		}
+	</script>
+</head>
+<body>
+</body>
+
+</html>

@@ -6,16 +6,23 @@ div#board {
 	width: 400px;
 	height:400px;
 }
-div#pane_control {
-	width:100%;
-}
 
-div#container_console {
+.panel {
 	border: 0px silver solid;
 	float:left;
-	width: 300px;	
+	width: 270px;	
 	height: 500px;
+	margin-left: 15px; margin-right:15px;
 }
+
+.tile_X {
+	background: url(css/icon_human_40.png) no-repeat center;
+}
+
+.tile_O {
+	background: url(css/icon_computer_40.png) no-repeat center;
+}
+
 
 .rule_inactive {
 	color:#222222;
