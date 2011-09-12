@@ -49,14 +49,14 @@
 		turnPlayer(p2);
 		$("#console_p2 > .message").empty();		
 		// $("#bigButton_computerMove").hide();
-		var html = "<div>My last move is based on...</div>";
+		var html = "<div>For my last move I tried all my strategies,...</div>";
 		var nextMove = game.findBestStrategy(game.board,game.turn,game.strategySet); // returns {'message':[[title]],'loc':[[x,y],...]};
 		console.log(nextMove);
 		// convert used strategies in HTML
 		enabledStrategy = game.getEnabledStrategy();  // get strategies AI learned so far
 		for(i in enabledStrategy) {
 			st = enabledStrategy[i];
-			html = html+"<div style='margin-left:10px; line-height:1.6em; ' id='ai_"+ st['code'] +"' class='rule_inactive'>"+ st['name'] +"</div>";
+			html = html+"<div style='margin:10px 0 0 10px; ' id='ai_"+ st['code'] +"' class='rule_inactive'>"+ st['name'] +"</div>";
 		}
 		$("#console_p2 > .message").append(html);	// create list of strategies that AI knows
 		for(i in enabledStrategy) {
@@ -64,17 +64,24 @@
 			if (nextMove.message==st.name) {	// for the best strategy, 
 				// color it in red
 				console.log("found it!");
+				
 				$("#ai_"+st['code']).removeClass('rule_inactive');
 				$("#ai_"+st['code']).removeClass('rule_unapplicable');
 				$("#ai_"+st['code']).addClass('rule_selected');
+				$("#ai_"+st['code']).append("<span style='color:gray; font-size:13px;'> was applied.</span>");
 				break;
 			} else {   // for non-feasible (but top-priority) strategies
 				console.log("cannot find it!"+ nextMove.message + "," + st.name);  
 				$("#ai_"+st['code']).removeClass('rule_inactive');
 				$("#ai_"+st['code']).addClass('rule_unapplicable');
 				$("#ai_"+st['code']).removeClass('rule_selected');
+				$("#ai_"+st['code']).append("<span style='color:gray; font-size:13px;'> was not applicable.</span>");
+				
 			}
 		}
+		$("#console_p2 > .message").append("<div onclick='changeOrder();' style='font-size:14px; margin:10px 0 10px 15px; color:blue; cursor:pointer;'>[CHANGE ORDER]</div>");
+		
+		
 		if (nextMove.message=="Tie Game") {
 			$("#status").text(nextMove.message);
 			// $("#bigButton_newGame").show();
@@ -93,8 +100,14 @@
 			selectedLoc = nextMove.locList[Math.floor(Math.random()*nextMove.locList.length)]; // randomly select one location from list
 			game.move(selectedLoc[0], selectedLoc[1], game.turn); // update board ds with current game.turn and return new value of the cell
 			updateBoard();
+			$('#bigButton').hide();
 			checkWinner(); 
 		}
+	}
+	
+	function changeOrder() {
+		
+		
 	}
 	
 	function enableStrategy(code) {
@@ -142,9 +155,10 @@
 	}
 	function clearBoard() {
 		needReset=false;
+		$("#bigButton").hide();
 		game.restart();  // reset game.board, game.turn 
 		turnPlayer(p1);
-		$("#bigButton_newGame").hide();
+		// $("#bigButton_newGame").hide();
 		$("#status").css('background-color', 'white');
 		$("#rule").text("");
 		$("#console_p1 > .message").text("It's your turn. Click an empty cell for next move.");
@@ -164,13 +178,17 @@
 		updateBoard();	// update game.board on #txy.text
 		checkWinner();	// check winning condition. if yes, show the winner, otherwise show next one to play
 		// wait until user confirms which rule he used.
-		if (currMove != game.turn && !needReset)
-				computerMove();
-		
+		if (currMove != game.turn && !needReset) {
+			$("#console_p2 > .message").empty().text("AI is thinking...");
+			$("#bigButton").show();
+			var t= setTimeout("computerMove();",500);
+		}
+				
 	}
 	
 	
 	$(document).ready(function () {
+		$('#bigButton').hide();
 		game = new TicTacToe();
 		currMove = game.turn;
 		// $(".bigButton").hide();
@@ -204,7 +222,7 @@
 	
 </head>
 <body>	
-<div id='container' style="width:1010px; margin:auto;">
+<div id='container' style="width:auto;">
 	<div id="console_p1" class='panel' style="float:left;">
 		<div style="text-align:right; width:100%;">
 			<img src="css/icon_human_40.png" width="40px">
@@ -218,7 +236,8 @@
 		<div id="title_bar" style="width:100%; text-align:center;">
 			TicTacToe
 		</div>
-		<div id="board" style="position:relative;">
+		<div id="board" style="position:relative; margin-top:10px;">
+			<div id="bigButton" style="position:absolute; width:99%; z-index:5; height:99%; opacity:0.2; background-color:black"></div>
 			<div id="t00" class="tile"></div>
 			<div id="t10" class="tile"></div>
 			<div id="t20" class="tile"> </div>

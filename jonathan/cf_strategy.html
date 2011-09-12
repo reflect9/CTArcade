@@ -1,0 +1,147 @@
+<html>
+<head>
+	</head>
+	<body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
+
+<script type="text/javascript">
+
+function store(name, data) { localStorage.setItem(name, data); }
+function get(name) { return localStorage.getItem(name); }
+
+
+$(document).ready(function() {
+	loadMoves();
+});
+
+var CF_WIN = "Win";
+var CF_BLOCK_WIN = "Block Win";
+var CF_CENTER = "Take a Center Spot";
+
+var CF_HEXPAND = 'Expand Horizontal Line';
+var CF_VEXPAND = 'Expand Vertical Line';
+var CF_DEXPAND = 'Expand Diagonal Line';
+var CF_BLOCK_HEXPAND = 'Block Opponent`s Horizontal Line';
+var CF_BLOCK_VEXPAND = 'Block Opponent`s Vertical Line';
+var CF_BLOCK_DEXPAND = 'Block Opponent`s Diagonal Line';
+var CF_RANDOM = 'Random Move';
+
+function strategyList() {
+		return [CF_WIN, 'false',
+		 		CF_BLOCK_WIN, 'false',
+				CF_HEXPAND, 'false',
+				CF_VEXPAND, 'false',
+				CF_DEXPAND, 'false',
+				CF_BLOCK_HEXPAND, 'false',
+				CF_BLOCK_VEXPAND, 'false',
+				CF_BLOCK_DEXPAND, 'false',
+				CF_CENTER, 'false',
+                CF_RANDOM, 'true'
+	];
+}
+function loadMoves() {
+
+	var strat = get('cf_strategy')
+	if (!strat)
+		strat = strategyList();
+	else
+		strat=strat.split(",");
+		
+	if (strat) {
+		for (var i =0;i<strat.length;i+=2) {
+		    var enabled = (strat[i+1] == ('false')) ? "" :"checked";
+			$("ul#sortable").append('<li class="ui-state-default"><input type="checkbox"  '+ enabled + '/><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>'
+			 + strat[i] + '</li>');
+		}
+	}
+}
+
+function saveMoves() {
+	var arr = new Array();
+	var arr2 = new Array();
+	
+	$('#sortable li').each(function(index) {
+        var enabled = $(this).children("input:checkbox").is(":checked");
+	    arr.push([$(this).text(), enabled]);
+	 });
+	store('cf_strategy', arr);
+}
+
+</script>
+
+
+<div>
+	
+	<style type="text/css">
+		#sortable { list-style-type: none; margin: 0; padding: 0; width: 640px; min-height: 100px;  }
+		#sortable li { cursor: pointer; margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; }
+		#sortable li span { position: absolute; margin-left: -1.3em; }
+		#active { margin: 0; padding:0; width: 300px; height:200px; overflow:auto; border: thin silver solid;}
+		.selecty {
+			padding-left: 5px;
+			padding-bottom: 5px;
+			width: auto;
+			background-color: white;  /*#264874;*/
+			color: dodgerblue;
+
+			border: 1px solid #fff;
+			height:35px;
+			/*border-left: 2px solid #fff;*/
+		/*	float:left;*/
+		}
+
+		.selecty:hover{
+			background-color:#264874;
+			color: white;
+			cursor: pointer;
+
+		}
+
+		.selecty .title{
+			line-height: 1.4em;
+			font-size: 1.4em;
+			font-family: arial;
+		}
+#disabled {
+	width: 600px;
+	border:thin silver solid;
+	height:240px;
+	font-size:1.4em;
+	overflow: auto;
+	color:darkgray;
+	cursor:pointer;
+}
+		
+		</style>
+		<script type="text/javascript">
+		$(function() {
+			$("#sortable, #disabled").sortable({
+						connectWith: '.connectedSortable'
+					}).disableSelection();
+		});
+		</script>
+
+
+	<div class="demo">
+		<ul id="sortable" class="connectedSortable">
+		</ul>
+	
+
+
+			
+			
+			
+	
+	
+	</div><!-- End demo -->
+
+
+	
+</div>
+
+<br/>
+<a href="cf.html" onclick="saveMoves()">save strategy &amp; play</a>
+</body>
+
+</html>

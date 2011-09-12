@@ -438,7 +438,7 @@ var TTT_CENTER = "Take Center";
 var TTT_CORNER = "Take any corner";
 var TTT_OPP_CORNER = "Take opposite corner";
 var TTT_BLOCK_WIN = "Block Win";
-var TTT_TAKE_ADJ = "Take a side square";
+var TTT_TAKE_ADJ = "Take adjacent side square";
 var TTT_RANDOM = "Random Move";
 var TTT_BLOCK_CORNER_TRAP = "Block Corner Trap";
 

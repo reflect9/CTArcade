@@ -1,0 +1,180 @@
+<html>
+<head>
+	<style type="text/css">
+a {
+	color:blue;
+text-decoration:none;
+}
+	li {
+		font-size:16px;
+		width: 300px;
+	}
+	
+			#disabled { cursor: hand; color: gray; }
+		.detail {
+			color:gray;
+		}
+	</style>
+</head>
+<body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+	
+	
+<script type="text/javascript" src="sencha/ext-touch-debug.js"></script>
+
+<script type="text/javascript" src="js/Game.js"> </script>
+
+<script type="text/javascript">
+
+var a,b,c,d, x,y;
+
+function enable(x){
+	$("li:contains(" + x +")").remove();
+	$("#sortable").append(getTxt2(x));
+}
+
+
+function getTxt2(txt) {
+	if (txt == 'Random Move')
+	return "<li>" + txt + ' <span class="detail"></span></li>';
+    
+	else
+    return "<li>" + txt + ' <span class="detail">(<a href="#" onclick="disable(\''+txt+'\')">Disable</a>)</span></li>';
+			
+}
+
+function getTxt(txt) {
+	return "<li>" + txt + ' <span class="detail">(<a href="#" onclick="enable(\'' +txt+'\')">Enable</a>)</span></li>'
+}
+
+function disable(txt){
+	var x = (txt);
+	$("li:contains(" + x +")").remove();
+	
+    $("#disabled").append(getTxt(x));
+
+}
+
+
+$(document).ready(function() {
+	Ext.setup({
+	    onReady: function() {
+	         x = new Ext.util.Sortable('sortable', {
+	            itemSelector: 'li',
+	            direction: 'vertical',
+	            scroll: true,
+
+				group: 'test'
+
+	        });
+
+		     y = new Ext.util.Sortable('disabled', {
+	            itemSelector: 'li',
+	            direction: 'vertical',
+	            scroll: true,
+				group: 'test'
+
+	        });
+	}
+	});
+	loadMoves();
+	
+});
+
+
+
+
+function store(name, data) { 
+	localStorage.setItem(name, data);
+}
+function get(name) { 
+	return localStorage.getItem(name); 
+}
+
+
+
+
+
+function strategyList() {
+		return [TTT_WIN, 
+				TTT_CENTER,
+				TTT_CORNER,
+				TTT_OPP_CORNER,
+				TTT_BLOCK_WIN,
+				TTT_TAKE_ADJ,
+				TTT_BLOCK_CORNER_TRAP];
+}
+
+function loadMoves() {
+
+	var strat = get('strategy');
+	var strat_unused = get('strategy_unused');
+	
+	if (!strat) {
+		strat = ['Random Move']; // strategyList();
+		strat_unused = strategyList();
+	} else {
+		strat = strat.split(",");
+		strat_unused = strat_unused.split(',');
+	}	
+	if (strat) {
+		for (var i=0;i<strat.length;i++) {
+			$("ul#sortable").append(getTxt2(strat[i]));
+		}
+	}
+	if (strat_unused) {
+		for (var i=0; i<strat_unused.length;i++) {
+			$("ul#disabled").append(getTxt(strat_unused[i]))
+			// alert(strat_unused[i]);
+		}
+	}
+}
+
+function saveMoves() {
+	var arr = new Array();
+	var arr2 = new Array();
+	
+
+	$('#sortable li').each(function(index) {
+	    arr.push($(this).text());
+	  });
+	store('strategy', arr);
+	
+	
+	$('#disabled li').each(function(index) {
+	    arr2.push($(this).text());
+	  });
+	store('strategy_unused', arr2);
+	
+}
+
+</script>
+
+
+<div>
+	
+
+	
+
+
+	<div class="demo">
+
+	<ul id="sortable" class="connectedSortable">
+		
+	</ul>
+	<br/>
+	<ul id="disabled" class="connectedSortable">
+		
+	</ul>
+
+	</div><!-- End demo -->
+
+
+	
+</div>
+
+<br/>
+<a href="ttt.html" onclick="saveMoves()">save strategy &amp; play</a>
+</body>
+
+</html>

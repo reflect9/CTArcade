@@ -1,0 +1,182 @@
+<html>
+<head>
+	<meta name = "viewport" content = "width=device-width">
+	
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
+	
+	<script type="text/javascript" src="js/Game.js"> </script>
+
+	
+	<style type="text/css">
+		table {
+			font-size: 32px;
+			border:none;
+		}
+		.tile {
+			border: 2px silver solid;
+			cursor: pointer;
+			width: 128px;
+			height: 128px;
+			font-size:64px;
+			text-align: center;
+
+		}
+		.row {
+			border: thin silver solid;
+		}
+	</style>
+	
+</head>
+<body>
+	<script type="text/javascript">
+	var game=null;
+	var reset = false;
+	
+	$(document).ready(function () {
+		game = new Game(3,3);
+		var currMove = game.turn;
+		
+		$("#status").text(game.getStatus());
+		
+		
+		function doAutoMove() {
+			var currMove = game.turn;
+			
+			var move = computerMove();
+			if (move) {
+				var x = move[0];
+				var y = move[1];
+				var val = game.move(x, y);
+				$("#t"+x+""+y).text(val);
+				var winner = game.checkForWinner();
+				if (winner) {
+					$("#status").text(currMove + " wins!");
+					$("#status").css('background-color', 'yellow');
+					reset = true;
+				} else {
+					$("#status").text(game.turn + " to play");
+				}
+			}
+		}		
+		
+		function computerMove() {
+			/* Get strategy */
+			var tmp = (localStorage.strategy);
+			var strats;
+			if (tmp)
+				strats = tmp.split(",");
+			else {
+				strats = [TTT_RANDOM];
+			}
+			for (var i = 0;i<strats.length;i+=2) { //} in strats) {
+				var strat = strats[i];
+				var enabled = strats[i+1];
+				if (enabled == 'false')
+				    continue;
+				var move = false;
+				
+				if (strat == TTT_WIN)
+					move = game.takeWin();
+				else if (strat == TTT_BLOCK_WIN) 
+					move = game.takeBlockWin();			
+				else if (strat == TTT_CENTER)
+					move = game.takeCenter();
+				else if (strat == TTT_CORNER)
+					move = game.takeAnyCorner();
+				else if (strat == TTT_OPP_CORNER)
+					move = game.takeOppositeCorner();
+				else if (strat == TTT_TAKE_ADJ)
+					move = game.takeAdjacentSquare();
+				else if (strat == TTT_RANDOM)
+					move = game.takeRandom();
+				else if (strat == TTT_BLOCK_CORNER_TRAP)
+					move = game.stopL();
+				if (move) {
+				   $("#rule").text(strat);
+				   return move;
+				} 
+				    
+			}
+			
+			if (game.isFull()) {
+		        $("#status").text("Tie Game");
+		        $("#rule").text("");
+		    } else
+			    $("#rule").text("Random Move");
+		        
+			return game.takeRandom();
+            
+		}
+		
+		$(".tile").click(function(e) {
+			
+			if (reset) {
+				return;
+				// 
+				// clearBoard();
+				// 
+			}
+			
+			var currMove = game.turn;
+		    var x = parseInt($(this).attr('id')[1]);
+			var y = parseInt($(this).attr('id')[2]);
+			var val = game.move(x, y);
+			$(this).text(val);
+			var winner = game.checkForWinner();
+			if (winner) {
+				$("#status").text(currMove + " wins!");
+				$("#status").css('background-color', 'yellow');
+				reset = true;
+			} else {
+				$("#status").text(game.turn + " to play");
+			}
+			
+			if (currMove != game.turn && !reset)
+				doAutoMove();
+		})
+	});
+		
+		
+	
+	
+	function clearBoard() {
+		reset=false;
+		game.restart();
+		$("#status").css('background-color', 'white');
+		$("#rule").text("");
+        
+		for (var i = 0; i < 3; i++)
+			for (var j =0; j<3;j++)
+				$("#t"+i+""+j).html('&nbsp;');
+	}
+
+	</script>
+
+<p><b>Status</b>: <span id="status"></span> <br/><b>Last Computer Rule Used</b>:&nbsp;<span id="rule"></span></p>
+
+<table>
+	<tr class="row">
+		<td id="t00" class="tile">&nbsp;</td>
+		<td id="t10" class="tile">&nbsp;</td>
+		<td id="t20" class="tile">&nbsp;</td>
+	</tr>
+	<tr class="row">
+		<td id="t01" class="tile">&nbsp;</td>
+		<td id="t11" class="tile">&nbsp;</td>
+		<td id="t21" class="tile">&nbsp;</td>
+	</tr>
+	<tr class="row">
+		<td id="t02" class="tile">&nbsp;</td>
+		<td id="t12" class="tile">&nbsp;</td>
+		<td id="t22" class="tile">&nbsp;</td>
+	</tr>
+</table>
+<input type="button" value="New Game" onclick="clearBoard();">
+<br/><br/>
+<a href="strategy.html">Edit Strategy</a>
+<br/>
+<br/>
+<i>A random move will be used by default if no other moves are legal</i>
+</body>
+</html>

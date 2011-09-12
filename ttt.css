@@ -10,7 +10,7 @@ div#board {
 .panel {
 	border: 0px silver solid;
 	float:left;
-	width: 270px;	
+	width: 320px;	
 	height: 500px;
 	margin-left: 15px; margin-right:15px;
 }
@@ -23,18 +23,32 @@ div#board {
 	background: url(css/icon_computer_40.png) no-repeat center;
 }
 
+.message {
+	margin-top:15px;
+}
 
 .rule_inactive {
 	color:#222222;
+
+	background-clip
 	font-family : Arial, Helvetica, sans-serif;
 }
 .rule_unapplicable {
-	color:#aaa;
-	text-decoration:line-through;
+	color:#B81900;
+	line-height:1.1em;
+	background-image:url(css/icon_x.png);
+	background-position:0px -5px;
+	background-repeat: no-repeat;
+	padding-left:35px;
 	font-family : Arial, Helvetica, sans-serif;
 }
 .rule_selected {
-	color:#B81900;
+	color:#6e8d30;
+	line-height:1.1em;
+	background-position:0px -5px;
+	background-image:url(css/icon_y.png);	
+	background-repeat: no-repeat;
+	padding-left:35px;
 	font-family : Arial, Helvetica, sans-serif;
 }
 

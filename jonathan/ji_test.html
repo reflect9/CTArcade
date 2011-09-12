@@ -1,0 +1,161 @@
+<html>
+<head>
+	<meta name = "viewport" content = "width=device-width">
+	
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
+	
+	<script type="text/javascript" src="framework.js"> </script>
+
+	
+	<style type="text/css">
+		table {
+			font-size: 32px;
+			border:none;
+		}
+		.tile {
+			border: 2px silver solid;
+			cursor: pointer;
+			width: 128px;
+			height: 128px;
+			font-size:64px;
+			text-align: center;
+
+		}
+		.row {
+			border: thin silver solid;
+		}
+	</style>
+	
+</head>
+<body>
+	<script type="text/javascript">
+	var game=null;
+	var reset = false;
+	
+	$(document).ready(function () {
+		
+		
+		
+		function doAutoMove() {
+			var currMove = game.turn;
+			
+			var move = computerMove();
+			if (move) {
+				var x = move[0];
+				var y = move[1];
+				var val = game.move(x, y);
+				$("#t"+x+""+y).text(val);
+				var winner = game.checkForWinner();
+				if (winner) {
+					$("#status").text(currMove + " wins!");
+					reset = true;
+				} else {
+					$("#status").text(game.turn + " to play");
+				}
+			}
+		}		
+		
+		function computerMove() {
+			/* Get strategy */
+			var tmp = (localStorage.strategy);
+			var strats;
+			if (tmp)
+				strats = tmp.split(",");
+			else {
+				strats = [TTT_RANDOM];
+			}
+			for (var i = 0;i<strats.length;i++) { //} in strats) {
+				var strat = strats[i];
+				var move = false;
+				
+				if (strat == TTT_WIN)
+					move = game.takeWin();
+				else if (strat == TTT_BLOCK_WIN) 
+					move = game.takeBlockWin();			
+				else if (strat == TTT_CENTER)
+					move = game.takeCenter();
+				else if (strat == TTT_CORNER)
+					move = game.takeAnyCorner();
+				else if (strat == TTT_OPP_CORNER)
+					move = game.takeOppositeCorner();
+				else if (strat == TTT_TAKE_ADJ)
+					move = game.takeAdjacentSquare();
+				else if (strat == TTT_RANDOM)
+					move = game.takeRandom();
+				else if (strat == TTT_BLOCK_CORNER_TRAP)
+					move = game.stopL();
+				if (move) {
+				   $("#rule").text(strat);
+				   return move;
+				} else {
+					return game.takeRandom();
+				}
+			}
+		}
+		
+		$(".tile").click(function(e) {
+			
+			if (reset) {
+				return;
+				// 
+				// clearBoard();
+				// 
+			}
+			
+		    var pos = parseInt($(this).attr('id')[1]);
+			grid[pos] = 1; // Player is 1
+			
+			clearBoard();
+			rebuildBoard();
+			runAI();
+			clearBoard();
+			rebuildBoard();
+            // if (currMove != game.turn && !reset)
+                // doAutoMove();
+		})
+	});
+		
+		
+	function rebuildBoard() {
+		
+		for (var i = 0; i < 9; i++) {
+		    var p = grid[i];
+		    var player = (p == 0) ? ' ' : ((p == 1) ? 'X' : 'O');
+			$("#t"+i).html(player);
+		}
+	}
+	
+	function clearBoard() {
+		reset=false;
+		
+		for (var i = 0; i < 9; i++)
+			$("#t"+i).html('&nbsp;');
+	}
+
+	</script>
+<!--
+<p><b>Status</b>: <span id="status"></span> <br/><b>Last Computer Rule Used</b>:&nbsp;<span id="rule"></span></p>
+-->
+<table>
+	<tr class="row">
+		<td id="t0" class="tile">&nbsp;</td>
+		<td id="t1" class="tile">&nbsp;</td>
+		<td id="t2" class="tile">&nbsp;</td>
+	</tr>
+	<tr class="row">
+		<td id="t3" class="tile">&nbsp;</td>
+		<td id="t4" class="tile">&nbsp;</td>
+		<td id="t5" class="tile">&nbsp;</td>
+	</tr>
+	<tr class="row">
+		<td id="t6" class="tile">&nbsp;</td>
+		<td id="t7" class="tile">&nbsp;</td>
+		<td id="t8" class="tile">&nbsp;</td>
+	</tr>
+</table>
+<input type="button" value="New Game" onclick="window.location.reload(true);">
+<br/>
+<a href="strategy.html">Edit Strategy</a>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<html>
+<head>
+<meta name = "viewport" content = "width=device-width">	
+
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
+
+<script type="text/javascript" src="js/ConnectFour_434.js"> </script>
+
+<script>
+
+var game=null;
+
+var CF_WIN = "Win";
+var CF_BLOCK_WIN = "Block Win";
+var CF_CENTER = "Take a Center Spot";
+
+var CF_HEXPAND = 'Expand Horizontal Line';
+var CF_VEXPAND = 'Expand Vertical Line';
+var CF_DEXPAND = 'Expand Diagonal Line';
+var CF_BLOCK_HEXPAND = 'Block Opponent`s Horizontal Line';
+var CF_BLOCK_VEXPAND = 'Block Opponent`s Vertical Line';
+var CF_BLOCK_DEXPAND = 'Block Opponent`s Diagonal Line';
+var CF_RANDOM = 'Random Move';
+
+function defaultStrat() { 
+    return [CF_WIN, CF_BLOCK_WIN, CF_BLOCK_HEXPAND, CF_BLOCK_VEXPAND, , CF_BLOCK_DEXPAND, CF_CENTER];
+}
+
+function get(name) { return localStorage.getItem(name); }
+
+var doMove;
+var debug = [];
+
+
+
+$(document).ready(function () {
+
+	game = new ConnectFour();
+	game.setup();
+    
+	$("#status").text(game.getStatus());
+
+    $(".tile").click(function(e) {
+
+        if (game.reset) {
+			return;
+        }
+
+        var currMove = game.getTurn();
+        var x = parseInt($(this).attr('id')[1]);
+        var pt = game.move(x);        
+        var box = "#t"+pt[0]+pt[1];
+        $(box).text(currMove);
+        $(".tile:contains('Y')").css('color', 'red');
+		$(".tile:contains('X')").css('color', 'blue');
+		$("#status").text(game.turn + " to play");
+        
+        if (pt[2]) {
+            $("#status").text(currMove + " wins");
+            
+            var answer =confirm(currMove + ' wins! Start a new game?');
+            if (answer) {
+                game.restart();
+                clearBoard();
+            }
+    		
+        }
+				
+		
+		
+    });
+});
+
+function clearBoard() {
+	game.setup();
+    for (var i = 0; i < 7; i++)
+        for (var j =0; j< 6;j++)
+            $("#t"+i+""+j).html('&nbsp;');
+}
+</script>
+
+<style>
+table {
+font-size: 32px;
+border:none;
+}
+.tile {
+border: 2px silver solid;
+cursor: pointer;
+width: 64px;
+height: 64px;
+font-size:32px;
+text-align: center;
+}
+.row {
+border: thin silver solid;
+}
+</style>
+</head>
+<body>
+<h3>Connect Four</h3>
+<p>Drop your piece down a column and it will fall to the bottom-most unfilled space. Connect four pieces in a row (either vertically, horizontally or diagonally) to win!</p>
+<p>Status: <span id="status"></span></p>
+
+<table>
+<tr class="row">
+    <td id="t00" class="tile">&nbsp;</td>
+    <td id="t10" class="tile">&nbsp;</td>
+    <td id="t20" class="tile">&nbsp;</td>
+    <td id="t30" class="tile">&nbsp;</td>
+    <td id="t40" class="tile">&nbsp;</td>
+    <td id="t50" class="tile">&nbsp;</td>
+    <td id="t60" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t01" class="tile">&nbsp;</td>
+    <td id="t11" class="tile">&nbsp;</td>
+    <td id="t21" class="tile">&nbsp;</td>
+    <td id="t31" class="tile">&nbsp;</td>
+    <td id="t41" class="tile">&nbsp;</td>
+    <td id="t51" class="tile">&nbsp;</td>
+    <td id="t61" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t02" class="tile">&nbsp;</td>
+    <td id="t12" class="tile">&nbsp;</td>
+    <td id="t22" class="tile">&nbsp;</td>
+    <td id="t32" class="tile">&nbsp;</td>
+    <td id="t42" class="tile">&nbsp;</td>
+    <td id="t52" class="tile">&nbsp;</td>
+    <td id="t62" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t03" class="tile">&nbsp;</td>
+    <td id="t13" class="tile">&nbsp;</td>
+    <td id="t23" class="tile">&nbsp;</td>
+    <td id="t33" class="tile">&nbsp;</td>
+    <td id="t43" class="tile">&nbsp;</td>
+    <td id="t53" class="tile">&nbsp;</td>
+    <td id="t63" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t04" class="tile">&nbsp;</td>
+    <td id="t14" class="tile">&nbsp;</td>
+    <td id="t24" class="tile">&nbsp;</td>
+    <td id="t34" class="tile">&nbsp;</td>
+    <td id="t44" class="tile">&nbsp;</td>
+    <td id="t54" class="tile">&nbsp;</td>
+    <td id="t64" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t05" class="tile">&nbsp;</td>
+    <td id="t15" class="tile">&nbsp;</td>
+    <td id="t25" class="tile">&nbsp;</td>
+    <td id="t35" class="tile">&nbsp;</td>
+    <td id="t45" class="tile">&nbsp;</td>
+    <td id="t55" class="tile">&nbsp;</td>
+    <td id="t65" class="tile">&nbsp;</td>
+</tr>
+</table>
+<input type="button" value="New Game" onclick="game.restart();clearBoard();">
+<br/>
+</body>
+</html>

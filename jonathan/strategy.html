@@ -1,0 +1,82 @@
+<html>
+<head>
+	</head>
+	<body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
+
+<script type="text/javascript">
+
+function store(name, data) { localStorage.setItem(name, data); }
+function get(name) { return localStorage.getItem(name); }
+
+
+$(document).ready(function() {
+	loadMoves();
+});
+
+function strategyList() {
+		return new Array('Win', 'false', 'Take Center', 'false', 'Take corner opposite captured corner','false', 'Take any corner','false', 'Take adjacent side square','false', 'Block Win','false', 'Block Corner Trap', 'false', 'Random Move', 'true');
+}
+
+function loadMoves() {
+
+	var strat = get('strategy')
+	if (!strat)
+		strat = strategyList();
+	else
+		strat=strat.split(",");
+		
+	if (strat) {
+		for (var i =0;i<strat.length;i+=2) {
+		    var enabled = (strat[i+1] == ('false')) ? "" :"checked";
+			$("ul#sortable").append('<li class="ui-state-default"><input type="checkbox"  '+ enabled + '/><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>'
+			 + strat[i] + '</li>');
+		}
+	}
+}
+
+function saveMoves() {
+	var arr = new Array();
+	$('li').each(function(index) {
+	    var enabled = $(this).children("input:checkbox").is(":checked");
+	    arr.push([$(this).text(), enabled]);
+	  });
+	store('strategy', arr);
+}
+
+</script>
+
+
+<div>
+	
+	<style type="text/css">
+		#sortable { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+		#sortable li { cursor: pointer; margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; }
+		#sortable li span { position: absolute; margin-left: -1.3em; }
+		</style>
+		<script type="text/javascript">
+		$(function() {
+			$("#sortable").sortable();
+			$("#sortable").disableSelection();
+		});
+		</script>
+
+
+	<div class="demo">
+
+	<ul id="sortable">
+	
+	</ul>
+
+	</div><!-- End demo -->
+
+
+	
+</div>
+
+<br/>
+<a href="ttt.html" onclick="saveMoves()">save strategy &amp; play</a>
+</body>
+
+</html>

@@ -1,0 +1,323 @@
+<html>
+<head>
+<meta name = "viewport" content = "width=device-width">	
+
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
+
+<script type="text/javascript" src="js/ConnectFour.js"> </script>
+
+<script>
+
+var game=null;
+
+var CF_WIN = "Win";
+var CF_BLOCK_WIN = "Block Win";
+var CF_CENTER = "Take a Center Spot";
+
+var CF_HEXPAND = 'Expand Horizontal Line';
+var CF_VEXPAND = 'Expand Vertical Line';
+var CF_DEXPAND = 'Expand Diagonal Line';
+var CF_BLOCK_HEXPAND = 'Block Opponent`s Horizontal Line';
+var CF_BLOCK_VEXPAND = 'Block Opponent`s Vertical Line';
+var CF_BLOCK_DEXPAND = 'Block Opponent`s Diagonal Line';
+var CF_RANDOM = 'Random Move';
+
+function defaultStrat() { 
+    return [CF_WIN, CF_BLOCK_WIN, CF_BLOCK_HEXPAND, CF_BLOCK_VEXPAND, , CF_BLOCK_DEXPAND, CF_CENTER];
+}
+
+function get(name) { return localStorage.getItem(name); }
+
+var doMove;
+var debug = [];
+
+$(document).ready(function () {
+
+	game = new ConnectFour();
+	game.setup();
+    
+	$("#status").text(game.getStatus());
+
+
+	doMove = function computeMove() {
+		
+		// var strats = [
+		// 					game.tryToWin, 
+		// 					game.tryToBlock,
+		// 					game.takeCenter, 
+		// 					game.cfBlockVerticalLine,
+		// 					game.expandVerticalLine,
+		// 					game.expandHorizLine,
+		// 					game.expandDiagonalLine
+		// 		];
+		
+		// for (var i = 0; i < strats.length; i++) {
+			// var strat = strats[i];
+			// 			var result = strat.call(game);
+			// 			// if (i > 2)
+			// 				// result = result && game.oppCanWin(result);
+			// 			if (result) {
+			// 				debug = [i, result];
+			// 				return result;
+			// 			} 
+		// }
+		// 1. Block win
+		// 2. Try to win
+		// 3. Block horizontal stack
+		// 4. Block vertical stack
+		// 5. Build horizontal stack
+		// 6. build vertical stack
+		
+		strats = get('cf_strategy');
+		if (!strats) {
+			// alert('Using strategy a default strategy, click edit to customize');
+			strats = [CF_RANDOM];
+		} else
+			strats = strats.split(",");
+		for (var i =0; i <strats.length;i+=2) {
+			var strat = strats[i];
+			var enabled = strats[i+1];
+			if (enabled == 'false')
+			    continue;
+			var result = false;
+			
+			if (strat == CF_WIN) {
+				result = game.tryToWin();
+				if (result)
+					return result;
+			}
+			else if (strat == CF_BLOCK_WIN) {
+				result = game.tryToBlock();
+				if (result) {
+					$("#status").text(CF_BLOCK_WIN);
+					return result;
+				}
+			}
+			else if (strat == CF_BLOCK_HEXPAND) {
+				result = game.blockHorizLine();
+				if (result && !game.oppCanWinNext(result)) {
+					$("#status").text(CF_BLOCK_HEXPAND);
+					return result;
+				}
+			}
+			else if (strat == CF_BLOCK_DEXPAND) {
+				result = game.blockDiagLine();
+				if (result && !game.oppCanWinNext(result)) {
+					$("#status").text(CF_BLOCK_DEXPAND);
+					return result;
+				}
+			}
+			else if (strat == CF_BLOCK_VEXPAND) {
+				result = game.blockVerticalLine();
+				if (result) {
+					$("#status").text(CF_BLOCK_VEXPAND);
+					return result;
+				}
+			}
+			else if (strat == CF_CENTER) {
+				result = game.takeCenter();
+				if (result && !game.oppCanWinNext(result)) {
+					$("#status").text(CF_CENTER);
+					return result;
+				}
+			}
+			else if (strat == CF_VEXPAND) {
+			    
+				result = game.expandVerticalLine();
+				if (result ) {
+					$("#status").text(CF_VEXPAND);
+					
+					return result;
+				}
+			}
+			else if (strat == CF_DEXPAND) {
+				result = game.expandDiagonalLine();
+				if (result ) {
+					$("#status").text(CF_DEXPAND);
+					return result;
+				}
+			}
+			else if (strat == CF_HEXPAND) {
+				result = game.expandHorizLine();
+				
+				if (result) {
+					$("#status").text(CF_HEXPAND);
+					return result;
+				}
+			}
+			else if (strat == CF_RANDOM) {
+				$("#status").text(CF_RANDOM);
+				return game.randomMove();
+			}
+		}
+		
+		
+		/*
+		var result = game.tryToWin();
+		if (result)
+			return result;
+		
+		result =  game.tryToBlock();
+		if (result)
+			return result;
+		
+		result = game.blockHorizLine();
+		if (result && !game.oppCanWinNext(result))
+			return result;
+			
+		result = game.blockDiagLine();
+		if (result && !game.oppCanWinNext(result))
+			return result;
+		
+		result = game.expandHorizLine();
+		if (result && !game.oppCanWinNext(result))
+			return result;
+
+		result = game.takeCenter();
+		if (result && !game.oppCanWinNext(result))
+			return result;
+				
+		result = game.expandVerticalLine();
+		if (result && !game.oppCanWinNext(result))
+			return result;
+			
+		result = game.expandDiagonalLine();
+		if (result && !game.oppCanWinNext(result))
+			return result;
+			// || game.expandHorizLine() || game.takeCenter() ;
+		
+		*/
+		$("#status").text("Random Move (Will be used to avoid potential loss)");
+		// First non-losing legal move
+		return game.firstLegalMove();
+	};
+
+
+	function doAutoMove() {
+		if (game.reset)
+			return;
+		var currMove = game.turn;
+		var move = doMove();
+		var x = move[0];
+		var y = move[1];
+		// alert(move);
+		move = game.move(x);
+		x = move[0];
+		y = move[1];
+		$("#t" + x + "" + y).text(currMove);
+	}
+
+    $(".tile").click(function(e) {
+
+        if (game.reset) {
+			return;
+        }
+
+        var currMove = game.getTurn();
+        var x = parseInt($(this).attr('id')[1]);
+        var pt = game.move(x);        
+        var box = "#t"+pt[0]+pt[1];
+        $(box).text(currMove);
+        $("#status").text(game.turn + " to play");
+				
+		doAutoMove();
+		$(".tile:contains('Y')").css('color', 'red');
+		$(".tile:contains('X')").css('color', 'blue');
+		
+    });
+});
+
+function clearBoard() {
+	game.setup();
+    for (var i = 0; i < 7; i++)
+        for (var j =0; j< 6;j++)
+            $("#t"+i+""+j).html('&nbsp;');
+}
+</script>
+
+<style>
+table {
+font-size: 32px;
+border:none;
+}
+.tile {
+border: 2px silver solid;
+cursor: pointer;
+width: 64px;
+height: 64px;
+font-size:32px;
+text-align: center;
+}
+.row {
+border: thin silver solid;
+}
+</style>
+</head>
+<body>
+<h3>ConnectFour</h3>
+
+<p>Status: <span id="status"></span></p>
+
+<table>
+<tr class="row">
+    <td id="t00" class="tile">&nbsp;</td>
+    <td id="t10" class="tile">&nbsp;</td>
+    <td id="t20" class="tile">&nbsp;</td>
+    <td id="t30" class="tile">&nbsp;</td>
+    <td id="t40" class="tile">&nbsp;</td>
+    <td id="t50" class="tile">&nbsp;</td>
+    <td id="t60" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t01" class="tile">&nbsp;</td>
+    <td id="t11" class="tile">&nbsp;</td>
+    <td id="t21" class="tile">&nbsp;</td>
+    <td id="t31" class="tile">&nbsp;</td>
+    <td id="t41" class="tile">&nbsp;</td>
+    <td id="t51" class="tile">&nbsp;</td>
+    <td id="t61" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t02" class="tile">&nbsp;</td>
+    <td id="t12" class="tile">&nbsp;</td>
+    <td id="t22" class="tile">&nbsp;</td>
+    <td id="t32" class="tile">&nbsp;</td>
+    <td id="t42" class="tile">&nbsp;</td>
+    <td id="t52" class="tile">&nbsp;</td>
+    <td id="t62" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t03" class="tile">&nbsp;</td>
+    <td id="t13" class="tile">&nbsp;</td>
+    <td id="t23" class="tile">&nbsp;</td>
+    <td id="t33" class="tile">&nbsp;</td>
+    <td id="t43" class="tile">&nbsp;</td>
+    <td id="t53" class="tile">&nbsp;</td>
+    <td id="t63" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t04" class="tile">&nbsp;</td>
+    <td id="t14" class="tile">&nbsp;</td>
+    <td id="t24" class="tile">&nbsp;</td>
+    <td id="t34" class="tile">&nbsp;</td>
+    <td id="t44" class="tile">&nbsp;</td>
+    <td id="t54" class="tile">&nbsp;</td>
+    <td id="t64" class="tile">&nbsp;</td>
+</tr>
+<tr class="row">
+    <td id="t05" class="tile">&nbsp;</td>
+    <td id="t15" class="tile">&nbsp;</td>
+    <td id="t25" class="tile">&nbsp;</td>
+    <td id="t35" class="tile">&nbsp;</td>
+    <td id="t45" class="tile">&nbsp;</td>
+    <td id="t55" class="tile">&nbsp;</td>
+    <td id="t65" class="tile">&nbsp;</td>
+</tr>
+</table>
+<input type="button" value="New Game" onclick="game.restart();clearBoard();">
+<br/>
+<a href="cf_strategy.html">Edit Strategy</a>
+</body>
+</html>
