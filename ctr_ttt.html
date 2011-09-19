@@ -1,18 +1,28 @@
 <html>
 <head>
 	<meta name = "viewport" content = "width=device-width">
-	<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
 	<script type="text/javascript" src="js/TicTacToe.js"> </script>
 	<link rel="stylesheet" type="text/css" href="ttt.css"/>
 	<script type="text/javascript">
 	var game=null;
 	var needReset = false;   
-	var currMove;
+	var currentTurn;
 	var p1 = 'X';   // human player
 	var p2 = 'O'; 	// computer AI 
+	var currentStep = -1;  // how many moves done so far and which one is now being shown
+	var playbackMode = false; // True when user's viewing previous moves, 
+									// user can either resume game there or teach AI what it could've done.
 	
 	function turnPlayer(name) {
+		$("#currentStep").text(currentStep);
+		$(".icon_player").css('border','0px');
+		$("#icon_"+name).css('border','2px solid #aaa');
+		// $(".panel").css('background-color','#fff');
+		// $("#console_"+name).css('background-color','#eee');
+		// $(".panel").css('border','0px');
+		// $("#console_"+name).css('border','1px dotted #eee');
 		// $(".button_nav").css('color','black');
 		// $("#button_"+name).css('color','#f00');			
 		// className = $("#console_"+name).attr("class");
@@ -20,13 +30,13 @@
 		// $("#console_"+name).show();		
 	}
 	
-	function updateBoard() {  // update current board presentation
+	function updateBoard(board) {  // update current board presentation
 		// turnPlayer(game.turn);
 		for(var x=0;x<game.width;x++) {
 			for(var y=0;y<game.height;y++) {
 				$("#t"+x+""+y).removeClass('tile_'+p1);
 				$("#t"+x+""+y).removeClass('tile_'+p2);
-				$("#t"+x+""+y).addClass('tile_'+game.board[x][y]);
+				$("#t"+x+""+y).addClass('tile_'+board[x][y]);
 			}
 		}
 	}
@@ -46,17 +56,17 @@
 	
 	// it uses the current strategy setting to return the best move
 	function computerMove() {
-		turnPlayer(p2);
+		turnPlayer('p2');
 		$("#console_p2 > .message").empty();		
 		// $("#bigButton_computerMove").hide();
-		var html = "<div>For my last move I tried all my strategies,...</div>";
+		var html = "<div>For my last move I tried all my strategies,</div><ul id='sortable'>";
 		var nextMove = game.findBestStrategy(game.board,game.turn,game.strategySet); // returns {'message':[[title]],'loc':[[x,y],...]};
 		console.log(nextMove);
 		// convert used strategies in HTML
 		enabledStrategy = game.getEnabledStrategy();  // get strategies AI learned so far
 		for(i in enabledStrategy) {
 			st = enabledStrategy[i];
-			html = html+"<div style='margin:10px 0 0 10px; ' id='ai_"+ st['code'] +"' class='rule_inactive'>"+ st['name'] +"</div>";
+			html = html+"<li class='ui-state-default'><div style='margin:10px 0 0 10px; ' id='ai_"+ st['code'] +"' class='rule_inactive'>"+ st['name'] +"</div></li>";
 		}
 		$("#console_p2 > .message").append(html);	// create list of strategies that AI knows
 		for(i in enabledStrategy) {
@@ -68,7 +78,7 @@
 				$("#ai_"+st['code']).removeClass('rule_inactive');
 				$("#ai_"+st['code']).removeClass('rule_unapplicable');
 				$("#ai_"+st['code']).addClass('rule_selected');
-				$("#ai_"+st['code']).append("<span style='color:gray; font-size:13px;'> was applied.</span>");
+				$("#ai_"+st['code']).append("<span style='color:gray; font-size:13px;'> was the first applicable rule.</span>");
 				break;
 			} else {   // for non-feasible (but top-priority) strategies
 				console.log("cannot find it!"+ nextMove.message + "," + st.name);  
@@ -79,7 +89,14 @@
 				
 			}
 		}
-		$("#console_p2 > .message").append("<div onclick='changeOrder();' style='font-size:14px; margin:10px 0 10px 15px; color:blue; cursor:pointer;'>[CHANGE ORDER]</div>");
+		$("#console_p2 > .message").append("</ul>");
+		$("#sortable").sortable({
+			update : function(event, ui) {
+				changeOrder();
+			}
+		});
+		$("#sortable").disableSelection();
+		// $("#console_p2 > .message").append("<div onclick='changeOrder();' style='font-size:14px; margin:10px 0 10px 15px; color:blue; cursor:pointer;'>[CHANGE ORDER]</div>");
 		
 		
 		if (nextMove.message=="Tie Game") {
@@ -92,6 +109,7 @@
 			html = "<div style='line-height:2em;'>No strategy seems to match the situation.</div>"
 			$("#console_p2 > .message").append(html);
 		} else {
+			currentStep += 1;
 			$("#rule").text(nextMove.message);
 			//console.log(nextMove.locList.length);
 			html = "<div style='line-height:1.2em;margin-top:10px;'>Your turn now. Click an empty cell to take.</div>"
@@ -99,15 +117,109 @@
 			// now it selects one from all the moves of the best strategy
 			selectedLoc = nextMove.locList[Math.floor(Math.random()*nextMove.locList.length)]; // randomly select one location from list
 			game.move(selectedLoc[0], selectedLoc[1], game.turn); // update board ds with current game.turn and return new value of the cell
-			updateBoard();
+			updateBoard(game.board);
 			$('#bigButton').hide();
 			checkWinner(); 
+			var t = setTimeout("turnPlayer('p1')",700);
 		}
 	}
 	
+	function history(direction) {
+		if (direction=='next') currentStep += 1;
+		else currentStep -= 1;
+		if (currentStep>=game.history.length-1) {
+			historyMode('off');
+			tempBoard = game.history[game.history.length-1];
+			updateBoard(tempBoard['board']);
+			currentStep = game.history.length-1;
+			$("#currentStep").text(currentStep);
+			$(".icon_player").css('border','0px');
+			if (tempBoard['turn']=='O') $("#icon_p1").css('border','2px solid #aaa');
+			else $("#icon_p2").css('border','2px solid #aaa');
+			return;
+		} else if(currentStep<=-1) {
+			currentStep=0;
+			return;
+		} else {
+			historyMode('on');
+			tempBoard = game.history[currentStep];	
+			updateBoard(tempBoard['board']);
+			$("#currentStep").text(currentStep);
+			$(".icon_player").css('border','0px');
+			if (tempBoard['turn']=='O') {
+				$("#icon_p1").css('border','2px solid #aaa');
+				$("#console_p1 > .message").html("<div class='button_round' onclick='resumeGame(currentStep,tempBoard);' style='float:right;'>Resume Game Here</div>");
+				$("#console_p2 > .message").empty();
+			} else {
+				$("#icon_p2").css('border','2px solid #aaa');
+				$("#console_p1 > .message").empty();
+				$("#console_p2 > .message").html("<div>You can teach me what I could have done at this point. <br>To do that, click an empty cell and tell me why you think it is important.</div>");
+				$(".tile").click( function() {
+					teachAI(tempBoard['board'],tempBoard['turn'],$(this).attr('id'));
+				});
+			}
+			
+		}
+	}
+	
+	function teachAI(board,turn,loc) {
+		var x = loc[1];
+		var y = loc[2];
+		console.log(board, turn, [x,y]);
+		flippedTurn = (turn == p1) ? p2 : p1;
+		var matchingRules = game.analyzeMove(board,flippedTurn,[x,y]);
+		console.log(matchingRules);
+		$("#console_p2 > .message").empty().append("<div>Which rule below does match with your choice?")
+		$(matchingRules).each( function(i,rule) {
+			$('<div></div>',{
+				id : 'mR_'+rule['code'],
+				style : 'margin-left:20px;height:2em;'
+			})	.text(rule['name'])
+				.click(function() { enableStrategy(rule['code']);})
+				.appendTo('#console_p2 > .message');
+		});
+	}
+	
+	function resumeGame(currentStep,board) {
+		game.resumeAt(currentStep);
+		historyMode('off');
+		$(".tile").click( function() {
+			callUserMove($(this).attr('id'));
+		});
+	}
+	
+	function historyMode(flag) {
+		if(flag=='on') {
+			$(".tile").unbind();
+			$('.tile').css('background-color','#ddd');
+			$('#status').text('History mode')
+							.css('background-color','#0055ff');
+		} 
+		if(flag=='off') {
+			$(".tile").unbind();
+			$(".tile").click( function() {
+				callUserMove($(this).attr('id'));
+			});
+			$('.tile').css('background-color','#fff');
+			$('#status').text(currentTurn + " 's turn")
+							.css('background-color','#fff');
+			$("#console_p2 > .message").empty();
+			$("#console_p1 > .message").text("It's your turn. Click an empty cell to take.");			
+		}
+		
+	}
+	
 	function changeOrder() {
-		
-		
+		console.log('chageOrder');
+		nameList = [];
+		$('#sortable li').each(function(i,e) {
+			// extract the strategy code and push into new list
+			var c = $(e).clone();
+			console.log($(c).html());
+			console.log("aa"+ $(c).find('span').remove().end().text());
+			nameList.push($(c).text());
+		});
+		game.changeOrder(nameList);
 	}
 	
 	function enableStrategy(code) {
@@ -118,9 +230,9 @@
 	
 	function showMatchingRules(matchingRules)  {  // matchingRules : {name:text, code:text, locList:array of [x.y]}
 		console.log(matchingRules);
-		turnPlayer(p1);
+		turnPlayer('p1');
 		$("#console_p1 > .message").empty();
-		$('#console_p1 > .message').append("<div style='height:2em;'> I think your last move was based on... </div>")
+		$('#console_p1 > .message').append("<div style='height:2em;'> Is your last move based on one of these rules?</div>")
 		
 		//alert('showMatching');
 		$(matchingRules).each( function(i,rule) {
@@ -155,9 +267,11 @@
 	}
 	function clearBoard() {
 		needReset=false;
+		currentStep = 0;	$("#status").css('color','black');
 		$("#bigButton").hide();
+		historyMode('off');
 		game.restart();  // reset game.board, game.turn 
-		turnPlayer(p1);
+		turnPlayer('p1');
 		// $("#bigButton_newGame").hide();
 		$("#status").css('background-color', 'white');
 		$("#rule").text("");
@@ -170,15 +284,27 @@
 			}
 		}
 	}	
+	
+	function callUserMove(dd) {
+		if (needReset) {	// when baord is full or game already ended, needReset is true
+			return;
+		}
+		console.log('clciked');
+		var currentTurn = game.turn;
+		var x = dd[1];
+		var y = dd[2];
+		userMove(x,y);
+	}
 
 	function userMove(x,y) {
+		currentStep += 1;
 		showMatchingRules(game.analyzeMove(game.board,game.turn,[x,y]));
-		var val = game.move(x, y, currMove);  // update game.board, game.turn and game.history
+		var val = game.move(x, y, currentTurn);  // update game.board, game.turn and game.history
 		// $(this).text(val);   // change clicked cell's text
-		updateBoard();	// update game.board on #txy.text
+		updateBoard(game.board);	// update game.board on #txy.text
 		checkWinner();	// check winning condition. if yes, show the winner, otherwise show next one to play
 		// wait until user confirms which rule he used.
-		if (currMove != game.turn && !needReset) {
+		if (currentTurn != game.turn && !needReset) {
 			$("#console_p2 > .message").empty().text("AI is thinking...");
 			$("#bigButton").show();
 			var t= setTimeout("computerMove();",500);
@@ -188,11 +314,11 @@
 	
 	
 	$(document).ready(function () {
-		$('#bigButton').hide();
 		game = new TicTacToe();
-		currMove = game.turn;
-		// $(".bigButton").hide();
+		currentTurn = game.turn;
+		$("#bigButton").hide();
 		$("#status").text(game.getStatus());
+		console.log('start');
 		
 		// $(".tabnav li").click(
 			// function() {
@@ -201,15 +327,11 @@
 				// turnPlayer($(this).text().substring(0,1));
 			// }		
 		// );
-		turnPlayer(p1);
-		$(".tile").click(function() {
-			if (needReset) {	// when baord is full or game already ended, needReset is true
-				return;
-			}
-			var currMove = game.turn;
-			var x = parseInt($(this).attr('id')[1]);
-			var y = parseInt($(this).attr('id')[2]);
-			userMove(x,y);
+		currentStep += 1;
+		turnPlayer('p1');
+		
+		$(".tile").click( function() {
+			callUserMove($(this).attr('id'));
 		});
 // alert("dd");
 	});
@@ -225,7 +347,8 @@
 <div id='container' style="width:auto;">
 	<div id="console_p1" class='panel' style="float:left;">
 		<div style="text-align:right; width:100%;">
-			<img src="css/icon_human_40.png" width="40px">
+			<div id="icon_p1" class="icon_player"></div>
+			<div style="clear:both;"></div>
 		</div>
 		<div class='message'>
 			It's your turn. Click an empty cell to take.
@@ -256,17 +379,27 @@
 		</div>
 		<div id="pane_control">
 			<div>
-				<input type="button" value="New Game" onclick="clearBoard();">
-				<div id="status" class="message" style="float:right; margin-right:10px;">
-					..
+				<div style="float:left;"><input type="button" value="New Game" onclick="clearBoard();"></div>
+				<div id="historyControl" style="float:right;">
+					<span id="prev" onclick="history('prev');" style="cursor:pointer">
+						<
+					</span> 
+					[<span id='currentStep'>0</span>]
+					<span id="next" onclick="history('next');" style="cursor:pointer">
+						>
+					</span>
 				</div>
 				<div style="clear:both;"></div>
+				<div id="status" style="float:left; text-align:left; margin:5px;">
+					..
+				</div>
 			</div>
 		</div>
 	</div> <!-- container_board -->
 	<div id="console_p2" class='panel' style="float:left;">
 		<div style="text-align:left; width:100%;">
-			<img src="css/icon_computer_40.png" width="40px">
+			<div id='icon_p2' class='icon_player'></div>
+			<div style="clear:both;"></div>
 		</div>
 		<div class='message'>
 			Hi! I'm AI. <br>Let's play TicTacToe. <br>Please teach me how to win. 

@@ -16,13 +16,13 @@ function TicTacToe() {
 	var conversationState; 	// 
 	this.history = [];	// pop in/out current board state
 	this.strategySet = [
-						{'name':"Win",'code':"takeWin",'enabled':true},
-						{'name':"Block Win",'code':"takeBlockWin",'enabled':false},
-						{'name':"Take Center",'code':"takeCenter",'enabled':false},
-						{'name':"Take Any Corner",'code':"takeAnyCorner",'enabled':false},
-						{'name':"Take Adjacent Square",'code':"takeAdjacentSquare",'enabled':false},
-						{'name':"Random Move",'code':"takeRandom",'enabled':true},
-						{'name':"Take OppositeCorner",'code':"takeOppositeCorner",'enabled':false}
+						{'name':"Win",'code':"takeWin",'tooltip':'Take a cell completing three of my stones in a row/column/diagonal','enabled':true},
+						{'name':"Block Win",'code':"takeBlockWin",'tooltip':"Take a cell of the opponent's winning position", 'enabled':false},
+						{'name':"Take Center",'code':"takeCenter",'tooltip':"Take the center cell",'enabled':false},
+						{'name':"Take Any Corner",'code':"takeAnyCorner",'tooltip':"Take any corner",'enabled':false},
+						{'name':"Take Adjacent Square",'code':"takeAdjacentSquare",'tooltip':"Take non-corner cells on the side, if the center cell is mine.",'enabled':false},
+						{'name':"Random Move",'code':"takeRandom",'tooltip':"Take any empty cell.",'enabled':true},
+						{'name':"Take OppositeCorner",'code':"takeOppositeCorner",'tooltip':"Take a corner cell if its opposite corner is occupied by another player",'enabled':false}
 					];
 	
 	// var script = {
@@ -35,9 +35,11 @@ function TicTacToe() {
 		// win : "Amazing! I cannot beat you. One more round?"
 	// };
 
-    this.turn = this.p1;
-    this.started = false;    
-    this.board = setupBoard(this.width, this.height);
+
+ this.turn = this.p1;
+ this.started = false;    
+ this.board = setupBoard(this.width, this.height);
+  
 
 	/* INIT */
 
@@ -49,12 +51,16 @@ function TicTacToe() {
         return b;
     }
 
+
+
 	/* BASIC FUNCTIONS */
 
     this.getTurn = function () {   	return this.turn			};
     this.historyPush = function(b,loc,t) {
     	this.history.push({'board':this.cloneBoard(b), 'loc':loc, 'turn':this.turn});
     }
+
+
 	this.getBoard = function () {     return this.board;	  }
 	this.cloneBoard = function(b) {
 		var nb = setupBoard(this.width,this.height);
@@ -65,6 +71,22 @@ function TicTacToe() {
 		}
 		return nb;
 	}
+	
+	this.historyPush(this.board,undefined,undefined); // store current board and turn in history array        
+ 
+ 	this.resumeAt = function(step) {
+ 		if (step>=this.history.length-1) {
+ 			alert('history out of bound');	
+ 		} else {
+ 			nB = this.history[step];
+ 			this.board = nB['board'];
+ 			if(nB['turn']=='X') this.turn = 'O';
+ 			else this.turn = 'X';
+ 			// this.turn = nB['turn'];
+ 			this.history = this.history.slice(0,step);
+ 		}
+ 	}
+	
     this.move = function(i, j, t) {
         if (this.turn != t) {
         	console.log("player turn doesn't match!" + t + "!=" + this.turn);	
@@ -75,8 +97,8 @@ function TicTacToe() {
         	return;    	
         }
        	if (!started)   started = true;
-    	this.historyPush(this.board,[i,j],t); // store current board and turn in history array
-        this.board[i][j] = this.turn;            
+        this.board[i][j] = this.turn;    
+        this.historyPush(this.board,[i,j],t); // store current board and turn in history array        
         this.turn = (this.turn == this.p1) ? this.p2 : this.p1;
         return this.board[i][j];
     }
@@ -160,6 +182,7 @@ function TicTacToe() {
         this.turn = this.p1;
         this.board = setupBoard(this.width, this.height);
         this.history = [];
+        this.historyPush(this.board,undefined,undefined); // store current board and turn in history array        
         this.started=false;
     }
     
@@ -190,6 +213,32 @@ function TicTacToe() {
     			st['enabled']=true;
     		}
     	}
+    }
+    
+    this.changeOrder = function(nameList) {
+    	newStrategySet = [];  
+    	console.log(nameList);
+    	for (ni in nameList) {
+    		name = nameList[ni];
+    		for(i in this.strategySet) {
+    			st=this.strategySet[i];
+    			if(st['name']==name) {
+    				newStrategySet.push(st);
+    			}
+    		}
+    	}
+    	console.log(newStrategySet);
+    	// add strategies not in the codeList (new strategy order)
+    	for(si in this.strategySet) {
+    		st = this.strategySet[si];
+    		alreadyAdded = false;
+    		for (ni in nameList) {
+    			name = nameList[ni];
+    			if (name==st['name']) alreadyAdded = true;
+    		}
+    		if (alreadyAdded==false) newStrategySet.push(st);
+    	}
+    	this.strategySet = newStrategySet;
     }
     
     this.findBestStrategy = function(brd,player,strategy) {
@@ -441,7 +490,6 @@ var TTT_BLOCK_WIN = "Block Win";
 var TTT_TAKE_ADJ = "Take adjacent side square";
 var TTT_RANDOM = "Random Move";
 var TTT_BLOCK_CORNER_TRAP = "Block Corner Trap";
-
 
 
 

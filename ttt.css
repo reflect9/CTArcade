@@ -6,6 +6,41 @@ div#board {
 	width: 400px;
 	height:400px;
 }
+ul {
+
+}
+li { 
+	margin-left:-30px;
+	display: list-item;
+	cursor:pointer;
+	}
+#sortable {
+	list-style-type:none;
+}
+
+#icon_p1{ 
+	float:right;
+	width:50px; height:50px;
+	background-image: url('css/icon_human_40.png');
+	background-position:center;
+	background-repeat:no-repeat;	
+}
+#icon_p2{ 
+	float:left;
+	width:50px; height:50px;
+	background-image: url('css/icon_computer_40.png');
+	background-position:center;
+	background-repeat:no-repeat;	
+} 
+
+.button_round{
+	background-color:#ccc;
+	border-radius : 10px;
+	padding:5px;
+	color:white;
+	cursor:pointer;
+	font-family: Arial, Helvetica, sans-serif;
+}
 
 .panel {
 	border: 0px silver solid;
@@ -24,21 +59,23 @@ div#board {
 }
 
 .message {
-	margin-top:15px;
+	margin-top:5px;
 }
 
-.rule_inactive {
-	color:#222222;
 
-	background-clip
+.rule_inactive {
+	color:#aaa;
+	overflow:visible;
+	padding-left:35px;
 	font-family : Arial, Helvetica, sans-serif;
 }
 .rule_unapplicable {
 	color:#B81900;
-	line-height:1.1em;
+	line-height:1.2em;
 	background-image:url(css/icon_x.png);
 	background-position:0px -5px;
 	background-repeat: no-repeat;
+	min-height:22px;
 	padding-left:35px;
 	font-family : Arial, Helvetica, sans-serif;
 }
@@ -49,6 +86,7 @@ div#board {
 	background-image:url(css/icon_y.png);	
 	background-repeat: no-repeat;
 	padding-left:35px;
+	min-height:22px;
 	font-family : Arial, Helvetica, sans-serif;
 }
 
