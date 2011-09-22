@@ -7,8 +7,8 @@ function get(name) { return localStorage.getItem(name); }
 	Game object
 */
 function TicTacToe() {
-	this.p1 = 'X'; 			// mark for each player   
-	this.p2 = 'O';			
+	// this.p1 = 'human'; 			  
+	// this.p2 = 'computer';			
 	this.width=3; 
 	this.height=3;  // initial dimension of board
 	var turn;  		// whose turn it is now --> this.p1 or this.p2 
@@ -20,7 +20,7 @@ function TicTacToe() {
 						{'name':"Block Win",'code':"takeBlockWin",'tooltip':"Take a cell of the opponent's winning position", 'enabled':false},
 						{'name':"Take Center",'code':"takeCenter",'tooltip':"Take the center cell",'enabled':false},
 						{'name':"Take Any Corner",'code':"takeAnyCorner",'tooltip':"Take any corner",'enabled':false},
-						{'name':"Take Adjacent Square",'code':"takeAdjacentSquare",'tooltip':"Take non-corner cells on the side, if the center cell is mine.",'enabled':false},
+						{'name':"Take Any Side",'code':"takeAnySide",'tooltip':"Take any non-corner cells on the side.",'enabled':false},
 						{'name':"Random Move",'code':"takeRandom",'tooltip':"Take any empty cell.",'enabled':true},
 						{'name':"Take OppositeCorner",'code':"takeOppositeCorner",'tooltip':"Take a corner cell if its opposite corner is occupied by another player",'enabled':false}
 					];
@@ -36,7 +36,7 @@ function TicTacToe() {
 	// };
 
 
- this.turn = this.p1;
+ this.turn = 'p1';
  this.started = false;    
  this.board = setupBoard(this.width, this.height);
   
@@ -60,7 +60,11 @@ function TicTacToe() {
     	this.history.push({'board':this.cloneBoard(b), 'loc':loc, 'turn':this.turn});
     }
 
-
+	
+	this.flip = function(player) {
+		if (player=="p1") return "p2"
+		else return "p1"
+	}
 	this.getBoard = function () {     return this.board;	  }
 	this.cloneBoard = function(b) {
 		var nb = setupBoard(this.width,this.height);
@@ -80,8 +84,8 @@ function TicTacToe() {
  		} else {
  			nB = this.history[step];
  			this.board = nB['board'];
- 			if(nB['turn']=='X') this.turn = 'O';
- 			else this.turn = 'X';
+ 			if(nB['turn']=='p1') this.turn = 'p2';
+ 			else this.turn = 'p1';
  			// this.turn = nB['turn'];
  			this.history = this.history.slice(0,step);
  		}
@@ -99,7 +103,7 @@ function TicTacToe() {
        	if (!started)   started = true;
         this.board[i][j] = this.turn;    
         this.historyPush(this.board,[i,j],t); // store current board and turn in history array        
-        this.turn = (this.turn == this.p1) ? this.p2 : this.p1;
+        this.turn = this.flip(this.turn);
         return this.board[i][j];
     }
 
@@ -162,7 +166,7 @@ function TicTacToe() {
 		matchingStrategy = [];
 		for (key in this.strategySet) {
 			st = this.strategySet[key];
-			console.log(st);
+			// console.log(st);
 			//console("ana" + brd,player);
 			result = this[st.code](brd,player);
 			if (true /*result['success']==true*/) {
@@ -175,11 +179,11 @@ function TicTacToe() {
 				}				
 			}
 		}
-		console.log(matchingStrategy);
+		// console.log(matchingStrategy);
 		return matchingStrategy;
 	}
     this.restart = function() {
-        this.turn = this.p1;
+        this.turn = 'p1';
         this.board = setupBoard(this.width, this.height);
         this.history = [];
         this.historyPush(this.board,undefined,undefined); // store current board and turn in history array        
@@ -188,11 +192,11 @@ function TicTacToe() {
     
     this.getStatus = function() {
         if (!this.started)
-            return "New Game, X to move";
-        else if (this.turn == this.p1)
-            return "X to move";
+            return "New Game, player 1 to move";
+        else if (this.turn == 'p1')
+            return "player 1 to move";
         else
-            return "Y to move";
+            return "player 2 to move";
         
     }
     
@@ -210,14 +214,28 @@ function TicTacToe() {
     	for (i in this.strategySet) {
     		st = this.strategySet[i];
     		if(st['code']==code) {
-    			st['enabled']=true;
+    			if(st['enabled']) {
+    				return false;
+    			} else {
+    				st['enabled']=true;
+    				return true;	
+    			}
+    		}
+    	}
+    	return 
+    }
+    
+    this.checkStrategyEnabled = function(code) {
+    	for (i in this.strategySet) {
+    		if(st['code']==code) {
+    			return st['enabled'];
     		}
     	}
     }
     
     this.changeOrder = function(nameList) {
     	newStrategySet = [];  
-    	console.log(nameList);
+    	// console.log(nameList);
     	for (ni in nameList) {
     		name = nameList[ni];
     		for(i in this.strategySet) {
@@ -317,34 +335,17 @@ function TicTacToe() {
 		result['loc'] = [];		
         var origTurn = player
         // Flip turn
-        player = (player == this.p1) ? this.p2 : this.p1;
+        player =  this.flip(player);;
         var willWin = this.takeWin(brd,player);
         // Restore original turn
         player = origTurn;
-        // if (!result)
-            // return this.stopL();
-			
 		if (willWin['success']) {
-			return willWin;
-			// loc = willWin['loc']
-			// if(!this.board[loc[0]][loc[1]]) {
-				// // I can and must block there
-				// result['success']=true;
-				// result['loc'].push(loc);	
-				// //return result;
-			// } else {
-				// // opponent's winning spot is already occupied
-				// //result['success']=false;
-				// return result;
-			// }		
+			return willWin;		
 		} else {
 			// no winning condition for opponent
 			result['success']=false;
 			return result;
-			//asdfasdfasdfasf
 		}		
-			
-        //return (result && !board[result[0]][result[1]]) ? result : false;
     }
     this.takeCenter = function(brd,player) {
     	// alert("take Center");
@@ -383,20 +384,18 @@ function TicTacToe() {
 		// result['success']=false;
 		return result;
     }
-    this.takeAdjacentSquare = function(brd,player) {
+    this.takeAnySide = function(brd,player) {
         var result = new Object();
         result['success']=false;
 		result['loc'] = [];	
         var moves = [[0,1], [1,0], [1,2], [2,1]];
         for (var i=0; i<moves.length;i++) {
             var pt = moves[i];
-            if (!brd[pt[0]][pt[1]] && player == brd[1][1]) {
+            if (!brd[pt[0]][pt[1]]) {
                 result['success']=true;
 				result['loc'].push([pt[0],pt[1]]);	
-				// return result;
             }
         }
-        //result['success']=false;
         return result;
     }
     this.takeRandom = function(brd,player) {	
@@ -411,18 +410,6 @@ function TicTacToe() {
 				}
 			}
 		}	
-        // var cnt = 0;
-        // while (cnt < 10000) {
-            // var ranX = Math.floor(Math.random()*3);
-            // var ranY = Math.floor(Math.random()*3);
-            // if (!this.board[ranX][ranY]){
-				// result['success']=true;
-				// result['loc'].push([ranX, ranY]);	
-				// return result;
-			// }
-            // cnt++;
-        // }
-		// result['success']=false;
 		return result;
     }
 	this.stopL = function (brd,player) {
@@ -430,9 +417,9 @@ function TicTacToe() {
 	    //								and in-between corner is empty.
 	    // 								if I don't take the corner, opp. will take it. 
     	var result = new Object();	
-   		result['success']=false;
+ 		result['success']=false;
 		result['loc'] = [];	
-        var oppTurn =  (player == p1) ? p2 : p1;
+        var oppTurn =  this.flip(player);
         if (!brd[0][0] && brd[0][1] == oppTurn && brd[1][0] == oppTurn)
 			result['success']=true;
 			result['loc'].push([0,0]);	
@@ -481,16 +468,12 @@ function TicTacToe() {
     }
 }
 
-//
-var TTT_WIN = "Win";
-var TTT_CENTER = "Take Center";
-var TTT_CORNER = "Take any corner";
-var TTT_OPP_CORNER = "Take opposite corner";
-var TTT_BLOCK_WIN = "Block Win";
-var TTT_TAKE_ADJ = "Take adjacent side square";
-var TTT_RANDOM = "Random Move";
-var TTT_BLOCK_CORNER_TRAP = "Block Corner Trap";
-
-
-
-
+// //
+// var TTT_WIN = "Win";
+// var TTT_CENTER = "Take Center";
+// var TTT_CORNER = "Take any corner";
+// var TTT_OPP_CORNER = "Take opposite corner";
+// var TTT_BLOCK_WIN = "Block Win";
+// var TTT_TAKE_SIDE = "Take any side";
+// var TTT_RANDOM = "Random Move";
+// var TTT_BLOCK_CORNER_TRAP = "Block Corner Trap";
